@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: coffee-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: Coffee
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - coffee-network
+
+  backend:
+    build: ./coffee_backend
+    container_name: coffee-backend
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: Coffee
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123
+    depends_on:
+      - db
+    networks:
+      - coffee-network
+
+  frontend:
+    build: ./coffee_frontend
+    container_name: coffee-frontend
+    ports:
+      - "5173:80"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8081
+    depends_on:
+      - backend
+    networks:
+      - coffee-network
+
+networks:
+  coffee-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
